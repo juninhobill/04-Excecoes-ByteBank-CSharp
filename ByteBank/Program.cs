@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,26 +11,65 @@ namespace ByteBank
     {
         static void Main(string[] args)
         {
-
             try
             {
-                ContaCorrente conta = new ContaCorrente(0, 89789789);
+                CarregarContas();
             }
-            catch (ArgumentException ex)
+            catch (Exception)
             {
-                if(ex.ParamName == "numero")
-                {
-
-                }
-
-                Console.WriteLine("Argumento com problema: " + ex.ParamName);
-                Console.WriteLine("Ocorreu uma exceção do tipo ArgumentException!!!");
-                Console.WriteLine(ex.Message);
+                Console.WriteLine("CATCH NO METODO MAIN");
             }
 
-            Console.WriteLine(ContaCorrente.TaxaOperacao);
-
+            Console.WriteLine("Execução finalizada. Tecle enter para sair");
             Console.ReadLine();
+        }
+
+        private static void CarregarContas()
+        {
+
+            using (LeitorDeArquivo leitor = new LeitorDeArquivo("teste.txt"))
+            {
+                leitor.LerProximaLinha();
+            }
+
+            // ---------------------------------------------------------------------
+
+            //LeitorDeArquivo leitor = null;
+            //try
+            //{
+            //    leitor = new LeitorDeArquivo("contas.txt");
+
+            //    leitor.LerProximaLinha();
+            //    leitor.LerProximaLinha();
+            //    leitor.LerProximaLinha();
+            //}
+            //finally
+            //{
+            //    Console.WriteLine("Executando finally");
+            //    if (leitor != null)
+            //    {
+            //        leitor.Fechar();
+            //    }
+            //}
+        }
+
+        private static void TestaInnerException()
+        {
+            try
+            {
+                ContaCorrente conta1 = new ContaCorrente(452, 89789789);
+                ContaCorrente conta2 = new ContaCorrente(234, 4653464);
+
+                //conta1.Transferir(10000, conta2);
+                conta1.Sacar(10000);
+            }
+            catch (OperacaoFinanceiraException e)
+            {
+                Console.WriteLine(e.Message);
+                Console.WriteLine(e.StackTrace);
+
+                //Console.WriteLine("Informações da INNER EXCEPTION (Exceção Interna): ");
+            }
         }
     }
 }

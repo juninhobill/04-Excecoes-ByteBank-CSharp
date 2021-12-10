@@ -9,7 +9,8 @@ namespace ByteBank
 
         public static double TaxaOperacao { get; private set; }
         public Cliente Titular { get; set; }
-
+        public int ContadorSaquesNaoPermitidos { get; private set; }
+        public int ContadorTransferenciasNaoPermitidos { get; private set; }
         public static int TotalDeContasCriadas { get; private set; }
 
         public int Agencia { get; }
@@ -55,21 +56,24 @@ namespace ByteBank
             Agencia = agencia;
             Numero = numero;
 
-            //TaxaOperacao = 30 / TotalDeContasCriadas;
-
             TotalDeContasCriadas++;
+            TaxaOperacao = 30 / TotalDeContasCriadas;
         }
 
 
-        public bool Sacar(double valor)
+        public void Sacar(double valor)
         {
-            if (_saldo < valor)
+            if( valor < 0 )
             {
-                return false;
+                throw new ArgumentException("Valor inválido para o saque.", nameof(valor));
             }
 
+            if (_saldo < valor)
+            {
+                ContadorSaquesNaoPermitidos++;
+                throw new SaldoInsuficienteException(Saldo, valor);
+            }
             _saldo -= valor;
-            return true;
         }
 
         public void Depositar(double valor)
@@ -78,16 +82,24 @@ namespace ByteBank
         }
 
 
-        public bool Transferir(double valor, ContaCorrente contaDestino)
+        public void Transferir(double valor, ContaCorrente contaDestino)
         {
-            if (_saldo < valor)
+            if (valor < 0)
             {
-                return false;
+                throw new ArgumentException("Valor inválido para a transferencia.", nameof(valor));
             }
 
-            _saldo -= valor;
+            try
+            {
+                Sacar(valor);
+            }
+            catch (SaldoInsuficienteException ex)
+            {
+                ContadorTransferenciasNaoPermitidos++;
+                throw new OperacaoFinanceiraException("Operação não realizada.", ex);
+            }
+
             contaDestino.Depositar(valor);
-            return true;
         }
     }
 }
